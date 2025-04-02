@@ -1,7 +1,12 @@
 .venv/
 credentials.json
 favorites.txt
+favorites.json
 token.json
 main.spec
 dist/
 build/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
