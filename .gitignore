@@ -1,0 +1,7 @@
+.venv/
+credentials.json
+favorites.txt
+token.json
+main.spec
+dist/
+build/
