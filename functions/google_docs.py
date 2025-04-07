@@ -1,5 +1,14 @@
-def toggle_bold(service, document_id, words, bold=True, ignore_case=False):
-    """Toggle bold formatting for the specified words in the Google Document."""
+def toggle_formatting(service, document_id, words, formatting_options, ignore_case=False):
+    """
+    Apply multiple formatting options (bold, italic, underline, strikethrough) to the specified words in the Google Document.
+
+    Args:
+        service: The Google Docs API service object.
+        document_id: The ID of the Google Document.
+        words: A list of words to format.
+        formatting_options: A dictionary specifying formatting options (e.g., {'bold': True, 'italic': False}).
+        ignore_case: Whether to ignore case when matching words.
+    """
     doc = service.documents().get(documentId=document_id).execute()
     requests = []
     changes_count = 0  # Counter for the number of changes made
@@ -31,18 +40,26 @@ def toggle_bold(service, document_id, words, bold=True, ignore_case=False):
                                 start_index += len(normalized_word)
                                 continue
 
-                            # Add the request to bold the word
+                            # Add the request to apply formatting
                             end_index = start_index + len(normalized_word)
+
+                            # Create the text_style dictionary with all formatting options
+                            text_style = {
+                                'bold': formatting_options.get('bold', False),
+                                'italic': formatting_options.get('italic', False),
+                                'underline': formatting_options.get('underline', False),
+                                'strikethrough': formatting_options.get('strikethrough', False)
+                            }
+                            fields = 'bold,italic,underline,strikethrough'
+
                             requests.append({
                                 'updateTextStyle': {
                                     'range': {
                                         'startIndex': paragraph_element['startIndex'] + start_index,
                                         'endIndex': paragraph_element['startIndex'] + end_index
                                     },
-                                    'textStyle': {
-                                        'bold': bold
-                                    },
-                                    'fields': 'bold'
+                                    'textStyle': text_style,
+                                    'fields': fields
                                 }
                             })
                             changes_count += 1  # Increment the counter
