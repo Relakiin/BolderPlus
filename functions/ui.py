@@ -2,26 +2,29 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 from tkinter import ttk
 from functions.favorites import save_favorites
-from styles import style_options, dark_bg, dark_fg, accent_color
+from styles import configure_styles, dark_bg, dark_fg, accent_color
 
 def open_favorite_dialog(title, initial_name="", initial_url=""):
-    """Open a dialog window with two text fields for name and URL, styled to match the general UI."""
+    """Open a dialog window with two text fields for name and URL."""
     dialog = tk.Toplevel()
     dialog.title(title)
-    dialog.geometry("500x225")
+    dialog.geometry("400x225")
     dialog.resizable(False, False)
-    dialog.configure(bg=dark_bg)  # Apply dark background to the dialog
+    dialog.configure(bg=dark_bg)
+
+    # Configure styles
+    configure_styles()
 
     # Add padding to the dialog content
     content_frame = tk.Frame(dialog, bg=dark_bg, padx=20, pady=10)
     content_frame.pack(fill="both", expand=True)
 
-    tk.Label(content_frame, text="Nome del documento:", **style_options).pack(pady=5, anchor="w")
+    tk.Label(content_frame, text="Nome del documento:", bg=dark_bg, fg=dark_fg).pack(pady=5, anchor="w")
     name_entry = tk.Entry(content_frame, width=50, bg=dark_bg, fg=dark_fg, insertbackground=dark_fg)
     name_entry.pack(pady=5, fill="x")
     name_entry.insert(0, initial_name)
 
-    tk.Label(content_frame, text="URL del documento:", **style_options).pack(pady=5, anchor="w")
+    tk.Label(content_frame, text="URL del documento:", bg=dark_bg, fg=dark_fg).pack(pady=5, anchor="w")
     url_entry = tk.Entry(content_frame, width=50, bg=dark_bg, fg=dark_fg, insertbackground=dark_fg)
     url_entry.pack(pady=5, fill="x")
     url_entry.insert(0, initial_url)
@@ -42,14 +45,10 @@ def open_favorite_dialog(title, initial_name="", initial_url=""):
     button_frame = tk.Frame(content_frame, bg=dark_bg, pady=10)
     button_frame.pack()
 
-    # Use ttk.Button with a custom style
-    style = ttk.Style()
-    style.configure("Accent.TButton", background=dark_bg, foreground=accent_color, borderwidth=1,)
-
     ttk.Button(button_frame, text="Conferma", command=on_submit, style="Accent.TButton").pack(side="left", padx=5)
     ttk.Button(button_frame, text="Annulla", command=dialog.destroy, style="Accent.TButton").pack(side="left", padx=5)
 
-    dialog.transient()  # Make the dialog modal
+    dialog.transient()
     dialog.grab_set()
     dialog.wait_window()
 

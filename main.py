@@ -6,7 +6,7 @@ from functions.favorites import load_favorites, save_favorites
 from functions.google_docs import toggle_formatting
 from functions.ui import add_favorite, remove_favorite, import_favorite, edit_favorite
 from tkinter import font
-from styles import style_options, dark_bg, dark_fg, accent_color
+from styles import style_options, dark_bg, dark_fg, accent_color, configure_styles
 from tkinter import ttk
 
 def main():
@@ -16,6 +16,9 @@ def main():
     root.title("Bolder +")
 
     root.configure(bg=dark_bg)  # Set the background color of the root window
+
+    # Configure styles
+    configure_styles()
 
     service = authenticate_google()
     favorites = load_favorites()
