@@ -6,6 +6,8 @@ from functions.favorites import load_favorites, save_favorites
 from functions.google_docs import toggle_formatting
 from functions.ui import add_favorite, remove_favorite, import_favorite, edit_favorite
 from tkinter import font
+from styles import style_options, dark_bg, dark_fg, accent_color
+from tkinter import ttk
 
 def main():
 
@@ -13,26 +15,13 @@ def main():
     root = tk.Tk()
     root.title("Bolder +")
 
-    # Apply dark mode styles
-    dark_bg = "#2e2e2e"  # Dark background color
-    dark_fg = "#ffffff"  # Light foreground color (text color)
-    accent_color = "#ffcc00"  # Accent color for highlights (e.g., gold)
-
     root.configure(bg=dark_bg)  # Set the background color of the root window
-
-    # Update styles for all widgets
-    style_options = {
-        "bg": dark_bg,
-        "fg": dark_fg,
-        "highlightbackground": dark_bg,
-        "highlightcolor": dark_fg
-    }
 
     service = authenticate_google()
     favorites = load_favorites()
 
     # Variable to store the selected document name
-    selected_document_name = tk.StringVar(value="Nessun documento selezionato", )
+    selected_document_name = tk.StringVar(value="Nessun documento selezionato")
 
     def update_favorites_list():
         """Update the Listbox with the current favorites."""
@@ -174,11 +163,15 @@ def main():
     button_frame = tk.Frame(main_frame, bg=dark_bg)
     button_frame.grid(row=1, column=1, padx=10, pady=5)  # Place the button_frame in the middle row
 
+    # Create a style for the buttons
+    style = ttk.Style()
+    style.configure("Accent.TButton", background=dark_bg, foreground=accent_color, borderwidth=1)
+
     # Add buttons to the button frame
-    tk.Button(button_frame, text="+ Aggiungi Preferito", command=lambda: add_favorite(favorites, update_favorites_list), bg=dark_bg, fg=accent_color).pack(pady=5, fill="x")
-    tk.Button(button_frame, text="- Rimuovi Preferito", command=lambda: remove_favorite(favorites, favorites_listbox, update_favorites_list), bg=dark_bg, fg=accent_color).pack(pady=5, fill="x")
-    tk.Button(button_frame, text="* Modifica Preferito", command=lambda: edit_favorite(favorites, favorites_listbox, update_favorites_list), bg=dark_bg, fg=accent_color).pack(pady=5, fill="x")
-    tk.Button(button_frame, text="! Importa da Bolder 1", command=lambda: import_favorite(favorites, update_favorites_list), bg=dark_bg, fg=accent_color).pack(pady=5, fill="x")
+    ttk.Button(button_frame, text="+ Aggiungi Preferito", command=lambda: add_favorite(favorites, update_favorites_list), style="Accent.TButton").pack(pady=5, fill="x")
+    ttk.Button(button_frame, text="- Rimuovi Preferito", command=lambda: remove_favorite(favorites, favorites_listbox, update_favorites_list), style="Accent.TButton").pack(pady=5, fill="x")
+    ttk.Button(button_frame, text="* Modifica Preferito", command=lambda: edit_favorite(favorites, favorites_listbox, update_favorites_list), style="Accent.TButton").pack(pady=5, fill="x")
+    ttk.Button(button_frame, text="! Importa da Bolder 1", command=lambda: import_favorite(favorites, update_favorites_list), style="Accent.TButton").pack(pady=5, fill="x")
 
     # Label to display the currently selected document
     selected_document_label = tk.Label(root, textvariable=selected_document_name, font=("Helvetica", 10), fg=dark_fg, bg=dark_bg)
@@ -218,7 +211,7 @@ def main():
 
     spinner_label = tk.Label(root, text="", fg=dark_fg, bg=dark_bg)
 
-    tk.Button(root, text="Applica", command=process_text, bg=dark_bg, fg=accent_color).pack()
+    ttk.Button(root, text="Applica", command=process_text, style="Accent.TButton").pack()
 
     update_favorites_list()
     root.mainloop()
