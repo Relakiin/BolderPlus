@@ -13,7 +13,6 @@ build_executable:
     - if: '$CI_COMMIT_TAG =~ /-RELEASE$/'
   script:
     - choco install python --yes
-    - refreshenv
     - py -m pip install pyinstaller
     - py -m PyInstaller --onefile main.py --no-console --hidden-import=google
   artifacts:
