@@ -7,11 +7,13 @@ variables:
 
 build_executable:
   stage: build
-  image: cibuilds/pyinstaller-windows
+  tags:
+    - windows
   rules:
     - if: '$CI_COMMIT_TAG =~ /-RELEASE$/'
   script:
-    - pyinstaller --onefile main.py
+    - pip install pyinstaller
+    - pyinstaller --onefile main.py --no-console --hidden-import=google
   artifacts:
     paths:
       - dist/main.exe
