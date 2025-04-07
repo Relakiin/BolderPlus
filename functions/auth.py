@@ -1,4 +1,5 @@
 import os
+from typing import Any
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -6,7 +7,7 @@ from googleapiclient.discovery import build
 
 SCOPES = ['https://www.googleapis.com/auth/documents']
 
-def authenticate_google():
+def authenticate_google() -> Any:
     """Authenticate the user with Google and return the service object."""
     creds = None
     if os.path.exists('token.json'):

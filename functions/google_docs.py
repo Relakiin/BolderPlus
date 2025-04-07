@@ -1,13 +1,24 @@
-def toggle_formatting(service, document_id, words, formatting_options, ignore_case=False):
+from typing import List, Dict, Any
+
+def toggle_formatting(
+    service: Any,  # The Google Docs API service object
+    document_id: str,  # The ID of the Google Document
+    words: List[str],  # A list of words to format
+    formatting_options: Dict[str, bool],  # Formatting options (e.g., {'bold': True, 'italic': False})
+    ignore_case: bool = False  # Whether to ignore case when matching words
+) -> int:
     """
     Apply multiple formatting options (bold, italic, underline, strikethrough) to the specified words in the Google Document.
 
     Args:
-        service: The Google Docs API service object.
-        document_id: The ID of the Google Document.
-        words: A list of words to format.
-        formatting_options: A dictionary specifying formatting options (e.g., {'bold': True, 'italic': False}).
-        ignore_case: Whether to ignore case when matching words.
+        service (Any): The Google Docs API service object.
+        document_id (str): The ID of the Google Document.
+        words (List[str]): A list of words to format.
+        formatting_options (Dict[str, bool]): A dictionary specifying formatting options (e.g., {'bold': True, 'italic': False}).
+        ignore_case (bool): Whether to ignore case when matching words.
+
+    Returns:
+        int: The number of changes made to the document.
     """
     doc = service.documents().get(documentId=document_id).execute()
     requests = []

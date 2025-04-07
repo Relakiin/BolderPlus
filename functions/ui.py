@@ -1,135 +1,215 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog
-from tkinter import ttk
-from functions.favorites import save_favorites
-from styles import configure_styles, dark_bg, dark_fg, accent_color
+from tkinter import ttk, font, messagebox
+from styles import style_options, dark_bg, dark_fg, accent_color, configure_styles
+from functions.favorites import (
+    update_favorites_list,
+    save_reordered_favorites,
+    add_favorite,
+    remove_favorite,
+    import_favorite,
+    edit_favorite,
+)
+from functions.google_docs import toggle_formatting
+import threading
+from typing import Dict, Callable
 
-def open_favorite_dialog(title, initial_name="", initial_url=""):
-    """Open a dialog window with two text fields for name and URL."""
-    dialog = tk.Toplevel()
-    dialog.title(title)
-    dialog.geometry("400x225")
-    dialog.resizable(False, False)
-    dialog.configure(bg=dark_bg)
+
+def create_gui(service: object, favorites: Dict[str, str]) -> None:
+    """Create the GUI and handle events.
+
+    Args:
+        service (object): The Google Docs API service object.
+        favorites (Dict[str, str]): A dictionary of favorite documents.
+    """
+    # GUI setup
+    root = tk.Tk()
+    root.title("Bolder +")
+    root.configure(bg=dark_bg)
 
     # Configure styles
     configure_styles()
 
-    # Add padding to the dialog content
-    content_frame = tk.Frame(dialog, bg=dark_bg, padx=20, pady=10)
-    content_frame.pack(fill="both", expand=True)
+    # Variable to store the selected document name
+    selected_document_name = tk.StringVar(value="Nessun documento selezionato")
 
-    tk.Label(content_frame, text="Nome del documento:", bg=dark_bg, fg=dark_fg).pack(pady=5, anchor="w")
-    name_entry = tk.Entry(content_frame, width=50, bg=dark_bg, fg=dark_fg, insertbackground=dark_fg)
-    name_entry.pack(pady=5, fill="x")
-    name_entry.insert(0, initial_name)
+    def on_drag_start(event: tk.Event) -> None:
+        """Start dragging an item.
 
-    tk.Label(content_frame, text="URL del documento:", bg=dark_bg, fg=dark_fg).pack(pady=5, anchor="w")
-    url_entry = tk.Entry(content_frame, width=50, bg=dark_bg, fg=dark_fg, insertbackground=dark_fg)
-    url_entry.pack(pady=5, fill="x")
-    url_entry.insert(0, initial_url)
+        Args:
+            event (tk.Event): The drag start event.
+        """
+        widget = event.widget
+        widget.dragged_item_index = widget.nearest(event.y)
 
-    result = {"name": None, "url": None}
+    def on_drag_motion(event: tk.Event) -> None:
+        """Handle the dragging motion.
 
-    def on_submit():
-        name = name_entry.get().strip()
-        url = url_entry.get().strip()
-        if not name or not url:
-            messagebox.showerror("Errore", "Entrambi i campi devono essere compilati.")
+        Args:
+            event (tk.Event): The drag motion event.
+        """
+        widget = event.widget
+        dragged_item_index = widget.dragged_item_index
+        target_index = widget.nearest(event.y)
+
+        if dragged_item_index != target_index:
+            # Swap the items in the Listbox
+            dragged_item = widget.get(dragged_item_index)
+            widget.delete(dragged_item_index)
+            widget.insert(target_index, dragged_item)
+            widget.dragged_item_index = target_index
+
+    def on_drag_release(event: tk.Event) -> None:
+        """Handle the release of the dragged item.
+
+        Args:
+            event (tk.Event): The drag release event.
+        """
+        save_reordered_favorites(favorites, favorites_listbox)
+
+    def on_listbox_select(event: tk.Event) -> None:
+        """Store the selected document name and update the label.
+
+        Args:
+            event (tk.Event): The listbox select event.
+        """
+        selected_indices = favorites_listbox.curselection()
+        if selected_indices:
+            selected_name = favorites_listbox.get(selected_indices[0])
+            selected_document_name.set(f"Documento selezionato: {selected_name}")
+
+    def restore_selection(event: tk.Event = None) -> None:
+        """Restore the previously selected document in the Listbox.
+
+        Args:
+            event (tk.Event, optional): The focus event. Defaults to None.
+        """
+        current_document = selected_document_name.get().replace("Documento selezionato: ", "")
+        if current_document in favorites:
+            index = list(favorites.keys()).index(current_document)
+            favorites_listbox.selection_clear(0, "end")  # Clear any existing selection
+            favorites_listbox.selection_set(index)  # Reselect the previously selected document
+            favorites_listbox.activate(index)  # Ensure the selection is visually highlighted
+
+    def process_text() -> None:
+        """Process the text to apply formatting in a separate thread."""
+        # Get the currently selected document from the variable
+        current_document = selected_document_name.get().replace("Documento selezionato: ", "")
+        if current_document == "Nessun documento selezionato":
+            messagebox.showerror("Errore", "Seleziona un documento preferito.")
             return
-        result["name"] = name
-        result["url"] = url
-        dialog.destroy()
 
-    # Add buttons with proper padding and spacing
-    button_frame = tk.Frame(content_frame, bg=dark_bg, pady=10)
-    button_frame.pack()
+        # Get the document ID from the favorites dictionary
+        if current_document not in favorites:
+            messagebox.showerror("Errore", "Il documento selezionato non è valido.")
+            return
 
-    ttk.Button(button_frame, text="Conferma", command=on_submit, style="Accent.TButton").pack(side="left", padx=5)
-    ttk.Button(button_frame, text="Annulla", command=dialog.destroy, style="Accent.TButton").pack(side="left", padx=5)
+        document_id = favorites[current_document].split('/')[-2]
+        words = text_box.get("1.0", tk.END).strip().split(',')
+        if words == ['']:
+            messagebox.showerror("Errore", "Inserisci almeno una parola.")
+            return
+        ignore_case = ignore_case_var.get()
 
-    dialog.transient()
-    dialog.grab_set()
-    dialog.wait_window()
+        # Get formatting options from checkboxes
+        formatting_options = {
+            'bold': bold_var.get(),
+            'italic': italic_var.get(),
+            'underline': underline_var.get(),
+            'strikethrough': strikethrough_var.get()
+        }
 
-    return result["name"], result["url"]
+        # Show spinner
+        spinner_label.config(text="Elaborazione in corso...", fg="white")
+        spinner_label.pack()
 
-def add_favorite(favorites, update_favorites_list):
-    """Add a new favorite with a single dialog for name and URL."""
-    name, url = open_favorite_dialog("Aggiungi Preferito")
-    if name and url:
-        favorites[name] = url
-        save_favorites(favorites)
-        update_favorites_list()
-        messagebox.showinfo("Successo", "Preferito aggiunto con successo.")
+        def run_toggle_formatting() -> None:
+            """Run the toggle formatting operation in a separate thread."""
+            try:
+                changes_count = toggle_formatting(service, document_id, words, formatting_options, ignore_case)
+                if changes_count == 0:
+                    messagebox.showinfo("Informazione", "Nessuna modifica effettuata.")
+                else:
+                    messagebox.showinfo("Successo", f"Formattazione del testo aggiornata con successo. {changes_count} modifiche apportate.")
+            except Exception as error:
+                print(error)
+                messagebox.showerror("Errore", f"Si è verificato un errore: {error}")
+            finally:
+                # Hide spinner
+                spinner_label.pack_forget()
 
-def remove_favorite(favorites, favorites_listbox, update_favorites_list):
-    selected = favorites_listbox.curselection()
-    if selected:
-        name = favorites_listbox.get(selected)
-        del favorites[name]
-        save_favorites(favorites)
-        update_favorites_list()
+        threading.Thread(target=run_toggle_formatting).start()
 
-def import_favorite(favorites, update_favorites_list):
-    """Import favorites from a .txt file and save them to the JSON file."""
-    file_path = filedialog.askopenfilename(
-        title="Seleziona il file favorites.txt",
-        filetypes=[("Text Files", "*.txt")]
-    )
-    if not file_path:
-        messagebox.showerror("Errore", "Nessun file selezionato.")
-        return
+    # GUI components
+    tk.Label(root, text="Nannix presents...", font=("Helvetica", 8), **style_options).pack()
+    bolder_frame = tk.Frame(root, bg=dark_bg)
+    bolder_frame.pack(pady=10)
 
-    try:
-        with open(file_path, 'r') as file:
-            for line in file:
-                line = line.strip()
-                if '|' in line:
-                    name, document_id = map(str.strip, line.split('|'))
-                    # Convert document_id to full URL
-                    full_url = f"https://docs.google.com/document/d/{document_id}/edit"
-                    favorites[name] = full_url
-            save_favorites(favorites)
-            update_favorites_list()
-            messagebox.showinfo("Successo", "Preferiti importati con successo. Welcome to Bolder 2.0!")
-    except Exception as e:
-        messagebox.showerror("Errore", f"Si è verificato un errore durante l'importazione: {e}")
+    bolder_label = tk.Label(bolder_frame, text="Bolder", font=("Helvetica", 25, "bold"), fg=dark_fg, bg=dark_bg)
+    bolder_label.pack(side="left", padx=(10, 0))
 
-def edit_favorite(favorites, favorites_listbox, update_favorites_list):
-    """Edit the name or URL of an existing favorite with a single dialog."""
-    selected = favorites_listbox.curselection()
-    if not selected:
-        messagebox.showerror("Errore", "Seleziona un preferito da modificare.")
-        return
+    plus_label = tk.Label(bolder_frame, text="+", font=("Helvetica", 20, "bold"), fg=accent_color, bg=dark_bg)
+    plus_label.pack(side="left", padx=(0, 10))
+    tk.Label(root, text="Documenti preferiti", **style_options).pack()
 
-    # Get the selected favorite's name and URL
-    old_name = favorites_listbox.get(selected)
-    old_url = favorites[old_name]
+    main_frame = tk.Frame(root, bg=dark_bg)
+    main_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-    # Open the dialog with the current name and URL pre-filled
-    new_name, new_url = open_favorite_dialog("Modifica Preferito", initial_name=old_name, initial_url=old_url)
+    main_frame.grid_rowconfigure(0, weight=1)
+    main_frame.grid_rowconfigure(1, weight=0)
+    main_frame.grid_rowconfigure(2, weight=1)
+    main_frame.grid_columnconfigure(0, weight=1)
 
-    # Update the favorite if changes are made
-    if new_name and new_url:
-        # Preserve the position of the favorite in the list
-        position = list(favorites.keys()).index(old_name)
+    favorites_listbox = tk.Listbox(main_frame, height=15, width=40, bg=dark_bg, fg=dark_fg, selectbackground=accent_color, selectforeground=dark_bg)
+    favorites_listbox.grid(row=0, column=0, rowspan=3, padx=10, pady=5, sticky="ns")
 
-        # Create a new ordered dictionary with the updated favorite
-        updated_favorites = {}
-        for i, (key, value) in enumerate(favorites.items()):
-            if i == position:
-                updated_favorites[new_name] = new_url  # Insert the updated favorite
-            elif key != old_name:
-                updated_favorites[key] = value  # Keep other favorites unchanged
+    favorites_listbox.bind("<Button-1>", on_drag_start)
+    favorites_listbox.bind("<B1-Motion>", on_drag_motion)
+    favorites_listbox.bind("<ButtonRelease-1>", on_drag_release)
+    favorites_listbox.bind("<<ListboxSelect>>", on_listbox_select)
+    favorites_listbox.bind("<FocusOut>", restore_selection)
+    favorites_listbox.bind("<FocusIn>", restore_selection)
 
-        # Save the updated favorites and refresh the list
-        favorites.clear()
-        favorites.update(updated_favorites)
-        save_favorites(favorites)
-        update_favorites_list()
+    button_frame = tk.Frame(main_frame, bg=dark_bg)
+    button_frame.grid(row=1, column=1, padx=10, pady=5)
 
-        # Reselect the edited favorite
-        favorites_listbox.selection_clear(0, tk.END)
-        favorites_listbox.selection_set(position)
-        favorites_listbox.activate(position)
+    ttk.Button(button_frame, text="+ Aggiungi Preferito", command=lambda: add_favorite(favorites, lambda: update_favorites_list(favorites, favorites_listbox)), style="Accent.TButton").pack(pady=5, fill="x")
+    ttk.Button(button_frame, text="- Rimuovi Preferito", command=lambda: remove_favorite(favorites, favorites_listbox, lambda: update_favorites_list(favorites, favorites_listbox)), style="Accent.TButton").pack(pady=5, fill="x")
+    ttk.Button(button_frame, text="* Modifica Preferito", command=lambda: edit_favorite(favorites, favorites_listbox, lambda: update_favorites_list(favorites, favorites_listbox)), style="Accent.TButton").pack(pady=5, fill="x")
+    ttk.Button(button_frame, text="! Importa da Bolder 1", command=lambda: import_favorite(favorites, lambda: update_favorites_list(favorites, favorites_listbox)), style="Accent.TButton").pack(pady=5, fill="x")
+
+    selected_document_label = tk.Label(root, textvariable=selected_document_name, font=("Helvetica", 10), fg=dark_fg, bg=dark_bg)
+    selected_document_label.pack(pady=5)
+
+    tk.Label(root, text="Inserisci parole (separate da virgola):", **style_options).pack()
+    text_box = tk.Text(root, height=5, width=40, bg=dark_bg, fg=dark_fg, insertbackground=dark_fg)
+    text_box.pack()
+
+    text_box.bind("<FocusIn>", restore_selection)
+
+    ignore_case_var = tk.BooleanVar()
+    tk.Checkbutton(root, text="Ignora Maiuscole/Minuscole", variable=ignore_case_var, bg=dark_bg, fg=dark_fg, selectcolor=dark_bg).pack()
+
+    checkbox_frame = tk.Frame(root, bg=dark_bg)
+    checkbox_frame.pack()
+
+    bold_var = tk.BooleanVar()
+    italic_var = tk.BooleanVar()
+    underline_var = tk.BooleanVar()
+    strikethrough_var = tk.BooleanVar()
+
+    bold_font = font.Font(root, weight="bold", size=10)
+    italic_font = font.Font(root, slant="italic", size=10)
+    underline_font = font.Font(root, underline=True, size=10)
+    strikethrough_font = font.Font(root, overstrike=True, size=10)
+
+    tk.Checkbutton(checkbox_frame, text="Grassetto", variable=bold_var, font=bold_font, bg=dark_bg, fg=dark_fg, selectcolor=dark_bg).grid(row=0, column=0, pady=2, sticky="w")
+    tk.Checkbutton(checkbox_frame, text="Corsivo", variable=italic_var, font=italic_font, bg=dark_bg, fg=dark_fg, selectcolor=dark_bg).grid(row=0, column=1, pady=2, sticky="w")
+    tk.Checkbutton(checkbox_frame, text="Sottolineato", variable=underline_var, font=underline_font, bg=dark_bg, fg=dark_fg, selectcolor=dark_bg).grid(row=1, column=0, pady=2, sticky="w")
+    tk.Checkbutton(checkbox_frame, text="Barrato", variable=strikethrough_var, font=strikethrough_font, bg=dark_bg, fg=dark_fg, selectcolor=dark_bg).grid(row=1, column=1, pady=2, sticky="w")
+
+    spinner_label = tk.Label(root, text="", fg=dark_fg, bg=dark_bg)
+
+    ttk.Button(root, text="Applica", command=process_text, style="Accent.TButton").pack()
+
+    update_favorites_list(favorites, favorites_listbox)
+    root.mainloop()
