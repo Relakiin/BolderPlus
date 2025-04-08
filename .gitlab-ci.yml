@@ -14,7 +14,7 @@ build_executable:
   script:
     - choco install python --yes
     - py -m pip install pyinstaller
-    - py -m PyInstaller --onefile main.py --no-console --hidden-import=google
+    - py -m PyInstaller --onefile main.py --hide-console --hidden-import=google
   artifacts:
     paths:
       - dist/main.exe
