@@ -28,7 +28,7 @@ jobs:
           rename dist\main.exe dist\BolderPlus.exe
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: BolderPlus-Windows
           path: dist/BolderPlus.exe
@@ -55,7 +55,7 @@ jobs:
           mv dist/main dist/BolderPlus.app
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: BolderPlus-macOS
           path: dist/BolderPlus.app
@@ -83,7 +83,7 @@ jobs:
           mv dist/main dist/bolderplus
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: BolderPlus-Linux
           path: dist/bolderplus
@@ -96,7 +96,7 @@ jobs:
       - build_linux
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
 
