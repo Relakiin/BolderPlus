@@ -25,7 +25,7 @@ jobs:
       - name: Build Windows executable
         run: |
           pyinstaller --onefile main.py --noconsole --hidden-import=google
-          Rename-Item dist\main.exe dist\BolderPlus.exe
+          Rename-Item -Path dist\main.exe -NewName BolderPlus.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
