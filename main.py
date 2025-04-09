@@ -5,6 +5,7 @@ from functions.updater import check_for_updates
 
 VERSION_NAME = "__VERSION_NAME__" # Placeholder for the version name, replaced in pipeline
 GITHUB_REPO = "Relakiin/BolderPlus"
+# This script is the main entry point for the BolderPlus application.
 
 def bootstrap():
     """Bootstrap the application by checking for updates, authenticating, and launching the GUI."""
