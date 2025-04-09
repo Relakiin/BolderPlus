@@ -1,2 +1,2 @@
-CURRENT_VERSION = "0.5.1"
+CURRENT_VERSION = "0.6.0"
 GITHUB_REPO = "Relakiin/BolderPlus"
