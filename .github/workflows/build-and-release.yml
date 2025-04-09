@@ -137,10 +137,16 @@ jobs:
     env:
       VERSION_NAME: ${{ needs.config.outputs.version_name }}
     steps:
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Get tag annotation
         id: tag_message
