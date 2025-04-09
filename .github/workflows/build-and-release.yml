@@ -45,6 +45,7 @@ jobs:
       - name: Build Windows executable
         run: |
           echo "Building Bolder version ${{ env.VERSION_NAME }}"
+          (Get-Content main.py) -replace '__VERSION_NAME__', "${{ env.VERSION_NAME }}" | Set-Content main.py
           pyinstaller --onefile main.py --noconsole --hidden-import=google
           Rename-Item -Path dist\main.exe -NewName BolderPlus.exe
 
@@ -77,6 +78,7 @@ jobs:
       - name: Build macOS app
         run: |
           echo "Building Bolder version ${{ env.VERSION_NAME }}"
+          sed -i "s/__VERSION_NAME__/${{ env.VERSION_NAME }}/g" main.py
           pyinstaller --onefile main.py --noconsole --windowed --hidden-import=google
           mv dist/main.app dist/BolderPlus.app
 
@@ -89,7 +91,7 @@ jobs:
         with:
           name: BolderPlus-macOS
           path: dist/BolderPlus.app.zip
-          
+
   build_linux:
     runs-on: ubuntu-latest
     needs: config
@@ -114,6 +116,7 @@ jobs:
       - name: Build Linux executable
         run: |
           echo "Building Bolder version ${{ env.VERSION_NAME }}"
+          sed -i "s/__VERSION_NAME__/${{ env.VERSION_NAME }}/g" main.py
           pyinstaller --onefile main.py --noconsole --hidden-import=google
           mv dist/main dist/bolderplus
           chmod +x dist/bolderplus

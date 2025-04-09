@@ -39,7 +39,7 @@ def check_env() -> None:
     Raises:
         SystemExit: Exits the program with status code 1 if 'credentials.json' is missing.
     """
-    if VERSION_NAME is None:
+    if VERSION_NAME == "__VERSION_NAME__":
         # Show an error message and exit the program
         messagebox.showerror("Errore", "Versione sconosciuta di Bolder. Il programma verrà terminato.")
         sys.exit(1)
