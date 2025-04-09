@@ -78,7 +78,7 @@ jobs:
         run: |
           echo "Building Bolder version ${{ env.VERSION_NAME }}"
           pyinstaller --onefile main.py --noconsole --windowed --hidden-import=google
-          mv dist/main dist/BolderPlus.app
+          mv dist/main.app dist/BolderPlus.app
 
       - name: Compress macOS app
         run: |
