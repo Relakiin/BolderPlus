@@ -78,7 +78,7 @@ jobs:
       - name: Build macOS app
         run: |
           echo "Building Bolder version ${{ env.VERSION_NAME }}"
-          sed -i "s/__VERSION_NAME__/${{ env.VERSION_NAME }}/g" main.py
+          sed -i '' "s/__VERSION_NAME__/${{ env.VERSION_NAME }}/g" main.py
           pyinstaller --onefile main.py --noconsole --windowed --hidden-import=google
           mv dist/main.app dist/BolderPlus.app
 
