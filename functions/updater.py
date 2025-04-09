@@ -85,7 +85,7 @@ def check_for_updates() -> None:
     """Check for updates and download the new release if available."""
     release = get_latest_release()
     if release:
-        latest_version = release['tag_name']
+        latest_version = release['name']
         if latest_version != CURRENT_VERSION:
             # Ask the user if they want to update
             update_prompt = messagebox.askyesno(

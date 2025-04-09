@@ -11,8 +11,8 @@ from functions.favorites import (
 )
 from functions.google_docs import toggle_formatting
 import threading
-from typing import Dict, Callable
-
+from typing import Dict
+from utils.constants import CURRENT_VERSION
 
 def create_gui(service: object, favorites: Dict[str, str]) -> None:
     """Create the GUI and handle events.
@@ -144,12 +144,17 @@ def create_gui(service: object, favorites: Dict[str, str]) -> None:
     bolder_frame = tk.Frame(root, bg=dark_bg)
     bolder_frame.pack(pady=10)
 
-    bolder_label = tk.Label(bolder_frame, text="Bolder", font=("Helvetica", 25, "bold"), fg=dark_fg, bg=dark_bg)
-    bolder_label.pack(side="left", padx=(10, 0))
+    title_frame = tk.Frame(bolder_frame, bg=dark_bg)
+    title_frame.pack()
 
-    plus_label = tk.Label(bolder_frame, text="+", font=("Helvetica", 20, "bold"), fg=accent_color, bg=dark_bg)
-    plus_label.pack(side="left", padx=(0, 10))
-    tk.Label(root, text="Documenti preferiti", **style_options).pack()
+    bolder_label = tk.Label(title_frame, text="Bolder", font=("Helvetica", 25, "bold"), fg=dark_fg, bg=dark_bg)
+    bolder_label.pack(side="left")
+
+    plus_label = tk.Label(title_frame, text="+", font=("Helvetica", 20, "bold"), fg=accent_color, bg=dark_bg)
+    plus_label.pack(side="left")
+
+    ver_label = tk.Label(bolder_frame, text="v" + CURRENT_VERSION, font=("Helvetica", 10, "bold"), fg=accent_color, bg=dark_bg)
+    ver_label.pack(pady=(2, 0))
 
     main_frame = tk.Frame(root, bg=dark_bg)
     main_frame.pack(fill="both", expand=True, padx=10, pady=10)
