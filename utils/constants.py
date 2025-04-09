@@ -1,2 +1,4 @@
-CURRENT_VERSION = "0.6.0"
+import os
+
+CURRENT_VERSION = os.getenv("CURRENT_VERSION", "dev")
 GITHUB_REPO = "Relakiin/BolderPlus"
