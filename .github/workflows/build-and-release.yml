@@ -58,11 +58,15 @@ jobs:
           pyinstaller --onefile main.py --noconsole --windowed
           mv dist/main dist/BolderPlus.app
 
+      - name: Compress macOS app
+        run: |
+          zip -r dist/BolderPlus.app.zip dist/BolderPlus.app
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: BolderPlus-macOS
-          path: dist/BolderPlus.app
+          path: dist/BolderPlus.app.zip
 
   build_linux:
     runs-on: ubuntu-latest
@@ -139,9 +143,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/BolderPlus-macOS/BolderPlus.app
-          asset_name: BolderPlus.app
-          asset_content_type: application/octet-stream
+          asset_path: artifacts/BolderPlus-macOS/BolderPlus.app.zip
+          asset_name: BolderPlus.app.zip
+          asset_content_type: application/zip
 
       - name: Upload Linux Asset
         uses: actions/upload-release-asset@v1
