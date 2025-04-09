@@ -116,6 +116,7 @@ jobs:
           echo "Building Bolder version ${{ env.VERSION_NAME }}"
           pyinstaller --onefile main.py --noconsole --hidden-import=google
           mv dist/main dist/bolderplus
+          chmod +x dist/bolderplus
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
