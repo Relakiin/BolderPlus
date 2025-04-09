@@ -151,12 +151,12 @@ jobs:
       - name: Get tag annotation
         id: tag_message
         run: |
-          TAG_NAME=${GITHUB_REF##*/}
-          TAG_MESSAGE=$(git for-each-ref --format='%(contents)' refs/tags/$TAG_NAME)
-          TAG_MESSAGE=${TAG_MESSAGE:-"Release for version ${{ env.VERSION_NAME }}"}
+          TAG_NAME="${GITHUB_REF##*/}"
+          TAG_MESSAGE=$(git tag -l --format='%(contents)' "$TAG_NAME")
           echo "message<<EOF" >> $GITHUB_OUTPUT
           echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+        
         
       - name: Create GitHub Release
         id: create_release
