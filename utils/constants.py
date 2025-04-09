@@ -1,4 +1,4 @@
 import os
 
-CURRENT_VERSION = os.getenv("CURRENT_VERSION", "dev")
+CURRENT_VERSION = os.getenv("VERSION_NAME", "dev")
 GITHUB_REPO = "Relakiin/BolderPlus"
