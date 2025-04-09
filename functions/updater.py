@@ -1,13 +1,12 @@
 import requests
 from tkinter import messagebox
-from main import GITHUB_REPO, VERSION_NAME
 import platform
 import webbrowser
 import sys
 
-def get_latest_release():
+def get_latest_release(repo: str):
     """Fetch the latest release information from the GitHub API."""
-    url = f'https://api.github.com/repos/{GITHUB_REPO}/releases'
+    url = f'https://api.github.com/repos/{repo}/releases'
     headers = {
         "Accept": "application/vnd.github.v3+json"
     }
@@ -16,12 +15,12 @@ def get_latest_release():
     releases = response.json()
     return releases[0] if releases else None
 
-def check_for_updates() -> None:
+def check_for_updates(current_version: str, repo: str) -> None:
     """Check for updates and download the new release if available."""
-    release = get_latest_release()
+    release = get_latest_release(repo)
     if release:
         latest_version = release['name']
-        if latest_version != VERSION_NAME:
+        if latest_version != current_version:
             # Ask the user if they want to update
             update_prompt = messagebox.askyesno(
                 "Aggiornamento Disponibile",
