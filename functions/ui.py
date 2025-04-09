@@ -12,7 +12,7 @@ from functions.favorites import (
 from functions.google_docs import toggle_formatting
 import threading
 from typing import Dict
-from utils.constants import VERSION_NAME
+from main import VERSION_NAME
 
 def create_gui(service: object, favorites: Dict[str, str]) -> None:
     """Create the GUI and handle events.

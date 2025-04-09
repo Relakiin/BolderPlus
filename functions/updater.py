@@ -1,6 +1,6 @@
 import requests
 from tkinter import messagebox
-from utils.constants import GITHUB_REPO, VERSION_NAME
+from main import GITHUB_REPO, VERSION_NAME
 import platform
 import webbrowser
 import sys

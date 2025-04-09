@@ -6,7 +6,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
-from utils.constants import VERSION_NAME
+from main import VERSION_NAME
 
 SCOPES = ['https://www.googleapis.com/auth/documents']
 
