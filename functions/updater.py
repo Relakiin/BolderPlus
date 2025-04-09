@@ -1,8 +1,9 @@
 import requests
 from tkinter import messagebox
-from utils.constants import GITHUB_REPO, CURRENT_VERSION
+from utils.constants import GITHUB_REPO, VERSION_NAME
 import platform
 import webbrowser
+import sys
 
 def get_latest_release():
     """Fetch the latest release information from the GitHub API."""
@@ -20,7 +21,7 @@ def check_for_updates() -> None:
     release = get_latest_release()
     if release:
         latest_version = release['name']
-        if latest_version != CURRENT_VERSION:
+        if latest_version != VERSION_NAME:
             # Ask the user if they want to update
             update_prompt = messagebox.askyesno(
                 "Aggiornamento Disponibile",
@@ -55,3 +56,4 @@ def check_for_updates() -> None:
 
                 # Open the user's browser and download the asset
                 webbrowser.open(asset_url, new=2)
+                sys.exit(0)  # Exit the program after opening the browser

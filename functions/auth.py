@@ -6,6 +6,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
+from utils.constants import VERSION_NAME
 
 SCOPES = ['https://www.googleapis.com/auth/documents']
 
@@ -38,6 +39,11 @@ def check_env() -> None:
     Raises:
         SystemExit: Exits the program with status code 1 if 'credentials.json' is missing.
     """
+    if VERSION_NAME is None:
+        # Show an error message and exit the program
+        messagebox.showerror("Errore", "Versione sconosciuta di Bolder. Il programma verrà terminato.")
+        sys.exit(1)
+
     if not os.path.exists('credentials.json'):
     # Show an error message and exit the program
         messagebox.showerror("Errore", "File 'credentials.json' non trovato. Impossibile avviare Bolder.")
