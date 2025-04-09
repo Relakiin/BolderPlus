@@ -5,6 +5,8 @@ import sys
 from tkinter import Tk, ttk
 from utils.constants import GITHUB_REPO, CURRENT_VERSION
 import platform
+import zipfile
+import shutil
 
 def get_latest_release():
     """Fetch the latest release information from the GitHub API."""
@@ -53,6 +55,32 @@ def download_new_release(asset_url: str, output_path: str) -> None:
     root.destroy()
     print(f"Downloaded new release to {output_path}")
 
+def unzip_file(zip_path: str, extract_to: str) -> None:
+    """
+    Unzip a .zip file to the specified directory.
+
+    Args:
+        zip_path (str): The path to the .zip file.
+        extract_to (str): The directory where the contents will be extracted.
+    """
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_to)
+    print(f"Extracted {zip_path} to {extract_to}")
+
+def replace_old_app(new_app_path: str, app_dir: str) -> None:
+    """
+    Replace the old .app directory with the new one.
+
+    Args:
+        new_app_path (str): The path to the new .app directory.
+        app_dir (str): The path to the existing .app directory.
+    """
+    if os.path.exists(app_dir):
+        shutil.rmtree(app_dir)  # Remove the old .app directory
+        print(f"Removed old app at {app_dir}")
+    shutil.move(new_app_path, app_dir)  # Move the new .app to the target location
+    print(f"Replaced old app with new app at {app_dir}")
+
 def check_for_updates() -> None:
     """Check for updates and download the new release if available."""
     release = get_latest_release()
@@ -72,7 +100,7 @@ def check_for_updates() -> None:
                 if system == "windows":
                     asset_name = "BolderPlus.exe"
                 elif system == "darwin":  # macOS
-                    asset_name = "BolderPlus.app"
+                    asset_name = "BolderPlus.app.zip"
                 elif system == "linux":
                     asset_name = "bolderplus"
 
@@ -95,12 +123,22 @@ def check_for_updates() -> None:
                 output_path = os.path.join(os.getcwd(), asset_name)
                 download_new_release(asset_url, output_path)
 
+                # Handle macOS-specific logic for unzipping and replacing the old app
+                if system == "darwin":
+                    app_dir = os.path.join(os.getcwd(), "BolderPlus.app")
+                    unzip_dir = os.getcwd()
+                    unzip_file(output_path, unzip_dir)
+                    new_app_path = os.path.join(unzip_dir, "BolderPlus.app")
+                    replace_old_app(new_app_path, app_dir)
+                    os.remove(output_path)  # Delete the .zip file
+                    print(f"Deleted zip file at {output_path}")
+
                 # Notify the user and launch the new version (if applicable)
                 messagebox.showinfo("Aggiornamento Completato", f"Bolder Plus è stato aggiornato con successo. Verrà avviata la nuova versione.")
                 if system == "windows":
                     os.startfile(output_path)  # Launch the new executable on Windows
                 elif system == "darwin":
-                    os.system(f"open {output_path}")  # Launch the .app on macOS
+                    os.system(f"open {app_dir}")  # Launch the .app on macOS
                 elif system == "linux":
                     os.system(f"chmod +x {output_path} && {output_path}")  # Make executable and run on Linux
 
