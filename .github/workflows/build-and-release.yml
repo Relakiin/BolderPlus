@@ -1,0 +1,152 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - '*-RELEASE' # Trigger only on tags ending with "-RELEASE"
+
+jobs:
+  build_windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build Windows executable
+        run: |
+          pyinstaller --onefile main.py --noconsole --hidden-import=google
+          rename dist\main.exe dist\BolderPlus.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: BolderPlus-Windows
+          path: dist/BolderPlus.exe
+
+  build_macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build macOS app
+        run: |
+          pyinstaller --onefile main.py --noconsole --windowed
+          mv dist/main dist/BolderPlus.app
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: BolderPlus-macOS
+          path: dist/BolderPlus.app
+
+  build_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip python3-pyinstaller
+
+      - name: Build Linux executable
+        run: |
+          pyinstaller --onefile main.py --noconsole
+          mv dist/main dist/bolderplus
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: BolderPlus-Linux
+          path: dist/bolderplus
+
+  create_release:
+    runs-on: ubuntu-latest
+    needs:
+      - build_windows
+      - build_macos
+      - build_linux
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Extract version name
+        id: extract_version
+        run: |
+          VERSION_NAME=$(echo ${GITHUB_REF##*/} | sed 's/-RELEASE$//')
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo "::set-output name=version_name::$VERSION_NAME"
+        env:
+          GITHUB_REF: ${{ github.ref }}
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{ steps.extract_version.outputs.version_name }} # Use the extracted version name
+          body: |
+            Release for version ${{ steps.extract_version.outputs.version_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Windows Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/BolderPlus-Windows/BolderPlus.exe
+          asset_name: BolderPlus.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload macOS Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/BolderPlus-macOS/BolderPlus.app
+          asset_name: BolderPlus.app
+          asset_content_type: application/octet-stream
+
+      - name: Upload Linux Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/BolderPlus-Linux/bolderplus
+          asset_name: bolderplus
+          asset_content_type: application/octet-stream
