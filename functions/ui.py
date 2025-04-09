@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, font, messagebox
-from styles import style_options, dark_bg, dark_fg, accent_color, configure_styles
+from utils.styles import style_options, dark_bg, dark_fg, accent_color, configure_styles
 from functions.favorites import (
     update_favorites_list,
     save_reordered_favorites,

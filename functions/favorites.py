@@ -3,7 +3,7 @@ import json
 import tkinter as tk
 from tkinter import messagebox, filedialog
 from tkinter import ttk
-from styles import configure_styles, dark_bg, dark_fg
+from utils.styles import configure_styles, dark_bg, dark_fg
 from typing import Dict, Callable, Optional
 
 FAVORITES_FILE = "favorites.json"

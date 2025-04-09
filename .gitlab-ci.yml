@@ -3,9 +3,11 @@ stages:
   - release
 
 variables:
-  EXE_NAME: "BolderPlus.exe"
+  WINDOWS_EXE_NAME: "BolderPlus.exe"
+  MACOS_APP_NAME: "BolderPlus.app"
+  LINUX_EXECUTABLE_NAME: "bolderplus"
 
-build_executable:
+build_windows:
   stage: build
   tags:
     - saas-windows-medium-amd64
@@ -15,13 +17,51 @@ build_executable:
     - choco install python --yes
     - py -m pip install pyinstaller
     - py -m PyInstaller --onefile main.py --noconsole --hidden-import=google
+    - rename dist/main.exe dist/$WINDOWS_EXE_NAME  # Rename the generated file
   artifacts:
     paths:
-      - dist/main.exe  # Ensure the correct path to the .exe file
+      - dist/$WINDOWS_EXE_NAME  # Ensure the correct path to the renamed .exe file
+    expire_in: never
+
+build_macos:
+  stage: build
+  tags:
+    - saas-macos-medium-amd64
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /-RELEASE$/'
+  script:
+    - brew install python
+    - python3 -m pip install pyinstaller
+    - python3 -m PyInstaller --onefile main.py --noconsole --windowed
+    - mv dist/main.app dist/$MACOS_APP_NAME  # Rename the generated file
+  artifacts:
+    paths:
+      - dist/$MACOS_APP_NAME  # Ensure the correct path to the renamed .app file
+    expire_in: never
+
+build_linux:
+  stage: build
+  tags:
+    - saas-linux-medium-amd64
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /-RELEASE$/'
+  script:
+    - apt-get update && apt-get install -y python3 python3-pip
+    - python3 -m pip install pyinstaller
+    - python3 -m PyInstaller --onefile main.py --noconsole
+    - mv dist/main dist/$LINUX_EXECUTABLE_NAME  # Rename the generated file
+  artifacts:
+    paths:
+      - dist/$LINUX_EXECUTABLE_NAME  # Ensure the correct path to the renamed Unix executable
+    expire_in: never
 
 create_release:
   stage: release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - build_windows
+    - build_macos
+    - build_linux
   rules:
     - if: '$CI_COMMIT_TAG =~ /-RELEASE$/'
   before_script:
@@ -31,10 +71,16 @@ create_release:
     - echo "Creating GitLab release for version $VERSION_NAME"
   release:
     tag_name: "$CI_COMMIT_TAG"
-    name: "$VERSION_NAME" # Use the extracted version number as the release name
-    description: "Release for version $VERSION_NAME"
+    name: "${VERSION_NAME}" # Use the extracted version number as the release name
+    description: "Release for version ${VERSION_NAME}"
     assets:
       links:
-        - name: "$EXE_NAME"
-          filepath: "dist/main.exe"  # Correct path to the .exe file in the artifacts
-          url: "$CI_JOB_URL/artifacts/download?file_type=artifact"  # Correct URL to download the artifact
+        - name: "$WINDOWS_EXE_NAME"
+          filepath: "dist/$WINDOWS_EXE_NAME"
+          url: "$CI_JOB_URL/artifacts/file/dist/$WINDOWS_EXE_NAME"
+        - name: "$MACOS_APP_NAME"
+          filepath: "dist/$MACOS_APP_NAME"
+          url: "$CI_JOB_URL/artifacts/file/dist/$MACOS_APP_NAME"
+        - name: "$LINUX_EXECUTABLE_NAME"
+          filepath: "dist/$LINUX_EXECUTABLE_NAME"
+          url: "$CI_JOB_URL/artifacts/file/dist/$LINUX_EXECUTABLE_NAME"

@@ -3,8 +3,8 @@ import requests
 from tkinter import messagebox
 import sys
 from tkinter import Tk, ttk
-
-GITLAB_PROJECT_ID = '68606627'
+from utils.constants import GITLAB_PROJECT_ID, CURRENT_VERSION
+import platform
 
 def get_latest_release():
     """Fetch the latest release information from the GitLab API."""
@@ -50,34 +50,55 @@ def download_new_release(asset_url: str, output_path: str) -> None:
     root.destroy()
     print(f"Downloaded new release to {output_path}")
 
-def check_for_updates(current_version: str) -> None:
+def check_for_updates() -> None:
     """Check for updates and download the new release if available."""
     release = get_latest_release()
     if release:
         latest_version = release['name']
-        if latest_version != current_version:
+        if latest_version != CURRENT_VERSION:
             # Ask the user if they want to update
             update_prompt = messagebox.askyesno(
                 "Aggiornamento Disponibile",
                 f"È disponibile una nuova versione di Bolder Plus ({latest_version}). Vuoi aggiornare ora?"
             )
             if update_prompt:
-                # Find the .exe file in the assets
+                # Detect the user's operating system
+                system = platform.system().lower()
+                asset_name = None
+
+                if system == "windows":
+                    asset_name = "BolderPlus.exe"
+                elif system == "darwin":  # macOS
+                    asset_name = "BolderPlus.app"
+                elif system == "linux":
+                    asset_name = "bolderplus"
+
+                if not asset_name:
+                    messagebox.showerror("Errore", "Sistema operativo non supportato.")
+                    return
+
+                # Find the corresponding asset in the release
                 asset_url = None
                 for link in release['assets']['links']:
-                    if link['name'].endswith('.exe'):
+                    if link['name'] == asset_name:
                         asset_url = link['url']
                         break
 
                 if not asset_url:
-                    messagebox.showerror("Errore", "Impossibile trovare il file eseguibile per l'aggiornamento.")
+                    messagebox.showerror("Errore", f"Impossibile trovare il file per {system}.")
                     return
 
                 # Download the new release
-                output_path = os.path.join(os.getcwd(), 'BolderPlus.exe')
+                output_path = os.path.join(os.getcwd(), asset_name)
                 download_new_release(asset_url, output_path)
 
-                # Notify the user and launch the new version
-                messagebox.showinfo("Aggiornamento Completato", "Bolder Plus è stato aggiornato con successo. Verrà avviata la nuova versione.")
-                os.startfile(output_path)  # Launch the new executable
+                # Notify the user and launch the new version (if applicable)
+                messagebox.showinfo("Aggiornamento Completato", f"Bolder Plus è stato aggiornato con successo. Verrà avviata la nuova versione.")
+                if system == "windows":
+                    os.startfile(output_path)  # Launch the new executable on Windows
+                elif system == "darwin":
+                    os.system(f"open {output_path}")  # Launch the .app on macOS
+                elif system == "linux":
+                    os.system(f"chmod +x {output_path} && {output_path}")  # Make executable and run on Linux
+
                 sys.exit(0)  # Exit the current process
