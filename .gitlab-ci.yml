@@ -17,22 +17,24 @@ build_executable:
     - py -m PyInstaller --onefile main.py --noconsole --hidden-import=google
   artifacts:
     paths:
-      - dist/main.exe
+      - dist/main.exe  # Ensure the correct path to the .exe file
 
 create_release:
   stage: release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
     - if: '$CI_COMMIT_TAG =~ /-RELEASE$/'
-  script:
+  before_script:
     - VERSION_NAME=$(echo "$CI_COMMIT_TAG" | sed 's/-RELEASE$//') # Extract version number
+    - echo "VERSION_NAME=$VERSION_NAME" >> release.env # Save VERSION_NAME to a file
+  script:
     - echo "Creating GitLab release for version $VERSION_NAME"
   release:
     tag_name: "$CI_COMMIT_TAG"
-    name: "$VERSION_NAME"
-    description: "Release for $CI_COMMIT_TAG"
+    name: "$VERSION_NAME" # Use the extracted version number as the release name
+    description: "Release for version $VERSION_NAME"
     assets:
       links:
         - name: "$EXE_NAME"
-          filepath: "$CI_PROJECT_DIR/$EXE_NAME"
-          url: "$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/file/$EXE_NAME"
+          filepath: "dist/main.exe"  # Correct path to the .exe file in the artifacts
+          url: "$CI_JOB_URL/artifacts/download?file_type=artifact"  # Correct URL to download the artifact
