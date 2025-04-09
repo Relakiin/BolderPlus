@@ -142,6 +142,16 @@ jobs:
         with:
           path: artifacts
 
+      - name: Get tag annotation
+        id: tag_message
+        run: |
+          TAG_NAME=${GITHUB_REF##*/}
+          TAG_MESSAGE=$(git for-each-ref --format='%(contents)' refs/tags/$TAG_NAME)
+          TAG_MESSAGE=${TAG_MESSAGE:-"Release for version ${{ env.VERSION_NAME }}"}
+          echo "message<<EOF" >> $GITHUB_OUTPUT
+          echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -150,8 +160,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           release_name: ${{ env.VERSION_NAME }}
-          body: |
-            Release for version ${{ env.VERSION_NAME }}
+          body: ${{ steps.tag_message.outputs.message }}
           draft: false
           prerelease: false
 

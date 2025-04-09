@@ -22,9 +22,10 @@ def check_for_updates(current_version: str, repo: str) -> None:
         latest_version = release['name']
         if latest_version != current_version:
             # Ask the user if they want to update
+            release_message = release.get('body', '').strip()
             update_prompt = messagebox.askyesno(
                 "Aggiornamento Disponibile",
-                f"È disponibile una nuova versione di Bolder Plus ({latest_version}). Vuoi aggiornare ora?"
+                f"È disponibile una nuova versione di Bolder Plus ({latest_version}).\n\n{release_message}\n\nVuoi aggiornare ora?"
             )
             if update_prompt:
                 # Detect the user's operating system
