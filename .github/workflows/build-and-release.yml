@@ -5,6 +5,10 @@ on:
     tags:
       - '*-RELEASE' # Trigger only on tags ending with "-RELEASE"
 
+permissions:
+  contents: write # Required to create releases and upload assets
+  id-token: write # Required for GitHub Actions to authenticate with the repository
+
 jobs:
   build_windows:
     runs-on: windows-latest
