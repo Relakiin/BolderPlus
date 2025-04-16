@@ -80,11 +80,7 @@ jobs:
           echo "Building Bolder version ${{ env.VERSION_NAME }}"
           sed -i '' "s/__VERSION_NAME__/${{ env.VERSION_NAME }}/g" main.py
           pyinstaller --onefile main.py --noconsole --windowed --hidden-import=google
-          mv dist/main.app dist/BolderPlus.app
-
-      - name: Compress macOS app
-        run: |
-          zip -r dist/BolderPlus.app.zip dist/BolderPlus.app
+          mv dist/main dist/BolderPlus
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -157,7 +153,6 @@ jobs:
           echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         
-        
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -186,9 +181,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/BolderPlus-macOS/BolderPlus.app.zip
-          asset_name: BolderPlus.app.zip
-          asset_content_type: application/zip
+          asset_path: artifacts/BolderPlus-macOS/BolderPlus
+          asset_name: BolderPlus
+          asset_content_type: application/octet-stream
 
       - name: Upload Linux Asset
         uses: actions/upload-release-asset@v1
