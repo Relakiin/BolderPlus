@@ -55,40 +55,7 @@ jobs:
           name: BolderPlus-Windows
           path: dist/BolderPlus.exe
 
-  build_macos:
-    runs-on: macos-latest
-    needs: config
-    env:
-      VERSION_NAME: ${{ needs.config.outputs.version_name }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Build macOS app
-        run: |
-          echo "Building Bolder version ${{ env.VERSION_NAME }}"
-          sed -i '' "s/__VERSION_NAME__/${{ env.VERSION_NAME }}/g" main.py
-          pyinstaller --onefile main.py --noconsole --windowed --hidden-import=google
-          mv dist/main dist/BolderPlus
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: BolderPlus-macOS
-          path: dist/BolderPlus
-
-  build_linux:
+  build_unix:
     runs-on: ubuntu-latest
     needs: config
     env:
@@ -127,8 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build_windows
-      - build_macos
-      - build_linux
+      - build_unix
       - config
     env:
       VERSION_NAME: ${{ needs.config.outputs.version_name }}
@@ -175,17 +141,7 @@ jobs:
           asset_name: BolderPlus.exe
           asset_content_type: application/octet-stream
 
-      - name: Upload macOS Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/BolderPlus-macOS/BolderPlus
-          asset_name: BolderPlus
-          asset_content_type: application/octet-stream
-
-      - name: Upload Linux Asset
+      - name: Upload Unix Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
