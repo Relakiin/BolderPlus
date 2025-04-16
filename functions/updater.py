@@ -34,9 +34,7 @@ def check_for_updates(current_version: str, repo: str) -> None:
 
                 if system == "windows":
                     asset_name = "BolderPlus.exe"
-                elif system == "darwin":  # macOS
-                    asset_name = "BolderPlus"
-                elif system == "linux":
+                elif system == "darwin" or system == "linux":
                     asset_name = "bolderplus"
 
                 if not asset_name:
