@@ -86,7 +86,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: BolderPlus-macOS
-          path: dist/BolderPlus.app.zip
+          path: dist/BolderPlus
 
   build_linux:
     runs-on: ubuntu-latest
